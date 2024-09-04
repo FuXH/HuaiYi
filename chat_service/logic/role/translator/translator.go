@@ -2,7 +2,6 @@ package translator
 
 import (
 	roleentity "chat_service/entity/role"
-	"chat_service/logic/task"
 	"chat_service/logic/task/chat_task"
 	"chat_service/repository/remote/hunyuan"
 	"encoding/json"
@@ -22,38 +21,41 @@ type Translator struct {
 	role          *roleentity.Role
 	promptTplFile string
 	inputTpl      string
+	llmConfig     *hyentity.HyChatConfig
 }
 
 func init() {
 	translator := &Translator{
 		promptTplFile: "./prompt/translator.tpl",
+		llmConfig:     hyentity.NewChatConfig(),
 	}
 	translator.ParsePromptFile()
 
 	role.RegisterRole(translator.role.Name, translator)
 }
 
-func (p *Translator) Chat(chatID string,
-	msg *hyentity.HyMessage, chatCfg *hyentity.HyChatConfig) (*hyentity.HyChatRsp, error) {
-	msg.Content = p.EditMsg(msg)
-	hyRsp, err := p.BaseRole.Chat(chatID, msg, chatCfg)
+func (p *Translator) Do(input string) error {
+	input = p.editInput(input)
+
+	// 1、调用llm进行翻译
+	chatTask := chat_task.Init(p.role, hunyuan.GetInstance(), p.llmConfig, nil)
+	chatTaskRsp, err := chatTask.Exec(input)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	_ = p.Output(chatID, hyRsp, chatCfg)
-	return hyRsp, nil
+	// 2、输出结果
+	if err = p.Output(chatTaskRsp); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (p *Translator) Do(input string) error {
-	chatTask := chat_task.Init(p.role, hunyuan.GetInstance(), hyentity.NewChatConfig(), nil)
-	taskList := []task.Task{chatTask}
-
-	input = p.editInput(input)
-	for _, task := range taskList {
-		taskRsp, err := task.Exec(input)
-		
-	}
+func (p *Translator) Output(hyRsp *hyentity.HyChatRsp) error {
+	//hyRsp.Display()
+	content := hyRsp.GetContent(p.llmConfig.IsStream)
+	fmt.Printf("翻译结果：%s\n", content)
+	return nil
 }
 
 func (p *Translator) ParsePromptFile() {
@@ -81,11 +83,4 @@ func (p *Translator) ParsePromptFile() {
 func (p *Translator) editInput(input string) string {
 	input = strings.Replace(p.inputTpl, ReplaceQues, input, -1)
 	return input
-}
-
-func (p *Translator) Output(chatID string, hyRsp *hyentity.HyChatRsp, chatCfg *hyentity.HyChatConfig) error {
-	//hyRsp.Display()
-	content := hyRsp.GetContent(chatCfg.IsStream)
-	fmt.Println(content)
-	return nil
 }

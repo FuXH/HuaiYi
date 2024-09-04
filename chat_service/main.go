@@ -4,7 +4,6 @@ import (
 	"chat_service/logic/role"
 	"fmt"
 
-	hyentity "chat_service/entity/hunyuan_msg"
 	_ "chat_service/logic/role/alfred"
 	_ "chat_service/logic/role/translator"
 	_ "chat_service/tool_function"
@@ -18,16 +17,25 @@ type CityInfo struct {
 func main() {
 	fmt.Println("怀义怀义，知我心意！")
 
-	msg := &hyentity.HyMessage{
-		Role:    hyentity.HyRoleUser,
-		Content: "龙华今天穿什么衣服？",
-	}
+	//msg := &hyentity.HyMessage{
+	//	Role:    hyentity.HyRoleUser,
+	//	Content: "龙华今天穿什么衣服？",
+	//}
 	//_, err := translator.Role.Chat("", msg, hyentity.NewChatConfig())
 	//fmt.Println(err)
-	chatCfg := hyentity.NewChatConfig()
+	//chatCfg := hyentity.NewChatConfig()
 	//chatCfg.ToolChoice = "custom"
-	_, err := role.GetRole("Alfred").Chat("", msg, chatCfg)
+	//_, err := role.GetRole("Alfred").Chat("", msg, chatCfg)
+
+	err := role.GetRole("Alfred").Do("今天穿什么衣服？")
 	fmt.Println(err)
+
+	//w := &weather.Weather{}
+	//str := w.Call("{}")
+	//fmt.Println("str: ", str)
+
+	//err := role.GetRole("Translator").Do("今天是9月5号了。")
+	//fmt.Println(err)
 
 	//url := "http://send.wxbus163.cn/weather/getCityList"
 	//rsp := &struct {

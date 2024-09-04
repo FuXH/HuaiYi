@@ -91,23 +91,23 @@ func (p *HyCli) Chat(msg []*hyentity.HyMessage,
 	return rspBody.Response, nil
 }
 
-// HyByOnce 非流式调用混元接口
-func (p *HyCli) chatByOnce(request *hunyuan.ChatCompletionsRequest) (*hyentity.HyChatRsp, error) {
-	response, err := p.clientChat(request)
-	if err != nil {
-		return nil, fmt.Errorf("chatByOnce-clientChat fail, err: %s", err)
-	}
-	rspBody := &struct {
-		Response *hyentity.HyChatRsp
-	}{
-		Response: &hyentity.HyChatRsp{},
-	}
-	if err = json.Unmarshal([]byte(response.ToJsonString()), rspBody); err != nil {
-		return nil, fmt.Errorf("chatByOnce-Unmarshal fail, rspBody: %s, err: %s", response.ToJsonString(), err)
-	}
-
-	return rspBody.Response, nil
-}
+//// HyByOnce 非流式调用混元接口
+//func (p *HyCli) chatByOnce(request *hunyuan.ChatCompletionsRequest) (*hyentity.HyChatRsp, error) {
+//	response, err := p.clientChat(request)
+//	if err != nil {
+//		return nil, fmt.Errorf("chatByOnce-clientChat fail, err: %s", err)
+//	}
+//	rspBody := &struct {
+//		Response *hyentity.HyChatRsp
+//	}{
+//		Response: &hyentity.HyChatRsp{},
+//	}
+//	if err = json.Unmarshal([]byte(response.ToJsonString()), rspBody); err != nil {
+//		return nil, fmt.Errorf("chatByOnce-Unmarshal fail, rspBody: %s, err: %s", response.ToJsonString(), err)
+//	}
+//
+//	return rspBody.Response, nil
+//}
 
 // HyByStream 流式调用混元接口
 func (p *HyCli) chatByStream(request *hunyuan.ChatCompletionsRequest,
@@ -157,8 +157,8 @@ func (p *HyCli) clientChat(request *hunyuan.ChatCompletionsRequest) (*hunyuan.Ch
 
 	client, _ := hunyuan.NewClient(credential, regions.Guangzhou, cpf)
 	response, err := client.ChatCompletions(request)
-	util.WriteFile("req.txt", []string{request.ToJsonString()})
-	util.WriteFile("rsp.txt", []string{response.ToJsonString()})
+	_ = util.WriteFile("req.txt", []string{request.ToJsonString()})
+	_ = util.WriteFile("rsp.txt", []string{response.ToJsonString()})
 	if err != nil {
 		return nil, fmt.Errorf("clientChat fail, err: %s", err)
 	}

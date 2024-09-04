@@ -2,6 +2,8 @@ package alfred
 
 import (
 	roleentity "chat_service/entity/role"
+	"chat_service/logic/task/chat_task"
+	"chat_service/repository/remote/hunyuan"
 	"chat_service/tool_function"
 	"chat_service/tool_function/weather"
 	"chat_service/util"
@@ -17,12 +19,14 @@ type Alfred struct {
 
 	role          *roleentity.Role
 	promptTplFile string
+	llmConfig     *hyentity.HyChatConfig
 	funcCallList  []*hyentity.HyTool
 }
 
 func init() {
 	alfred := &Alfred{
 		promptTplFile: "./prompt/alfred.tpl",
+		llmConfig:     hyentity.NewChatConfig(),
 		funcCallList: []*hyentity.HyTool{
 			hyentity.NewHyTool(tool_function.FunctionList[weather.FuncName]),
 		},
@@ -53,22 +57,20 @@ func (p *Alfred) ParsePromptFile() {
 }
 
 func (p *Alfred) Do(input string) error {
-
-}
-
-func (p *Alfred) Chat(chatID string,
-	msg *hyentity.HyMessage,
-	chatCfg *hyentity.HyChatConfig) (*hyentity.HyChatRsp, error) {
-	hyRsp, err := p.BaseRole.Chat(chatID, msg, chatCfg)
+	chatTask := chat_task.Init(p.role, hunyuan.GetInstance(), p.llmConfig, p.funcCallList)
+	chatTaskRsp, err := chatTask.Exec(input)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	_ = p.Output(chatID, hyRsp, chatCfg)
-	return hyRsp, nil
+
+	if err = p.Output(chatTaskRsp); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (p *Alfred) Output(chatID string, hyRsp *hyentity.HyChatRsp, chatCfg *hyentity.HyChatConfig) error {
-	content := hyRsp.GetContent(chatCfg.IsStream)
+func (p *Alfred) Output(hyRsp *hyentity.HyChatRsp) error {
+	content := hyRsp.GetContent(p.llmConfig.IsStream)
 	fmt.Println("Alfred output: ", content)
 	return nil
 }

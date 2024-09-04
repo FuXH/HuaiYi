@@ -6,6 +6,7 @@ import (
 	"chat_service/util"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -56,58 +57,133 @@ func (p *Weather) GetInfo() (string, string, string) {
 func (p *Weather) Call(input string) string {
 	args := &struct{}{}
 	if err := json.Unmarshal([]byte(input), args); err != nil {
+		fmt.Println(err)
 		return ""
 	}
 
 	// 1、获取当前地点
-	id := p.cityMap[CurPosition]
-	id = 4833
+	province, city, country := "广东省", "深圳市", "龙华区"
 
 	// 2、获取当前天气
-	weather := getTodayWeather(id)
+	weather := getTodayWeather(province, city, country)
 	return weather
 }
 
 // WeatherInfo 天气信息
 type WeatherInfo struct {
-	CityName   string          `json:"cityname"`
-	Today      string          `json:"today"`
-	MaxTemp    string          `json:"max_temp"`
-	MinTemp    string          `json:"min_temp"`
-	NowTemp    string          `json:"now_temp"`
-	Weather    string          `json:"weather"`
-	Aqi        string          `json:"aqi"`
-	Wind       string          `json:"wind"`
-	Humidity   string          `json:"humidity"`
-	Air        string          `json:"air"`
-	Visibility string          `json:"visibility"`
-	Shzhishu   []*WeatherIndex `json:"shzhishu"`
+	Observe    *Observe               `json:"observe"`     // 实时观测数据
+	Forecast1H map[string]*Forecast1H `json:"forecast_1h"` // 1小时预测数据
+	Index      *Index                 `json:"index"`       // 天气指数
+	Alarm      map[string]*AlarmInfo  `json:"alarm"`       // 警告
+	Tips       *Tips                  `json:"tips"`        // 提示
+	Rise       map[string]*Rise       `json:"rise"`        // 日出日落
+	Air        *Air                   `json:"air"`         // 空气质量
 }
 
-// WeatherIndex 天气指数
-type WeatherIndex struct {
-	Title string `json:"title"`
-	Des   string `json:"des"`
+type Observe struct {
+	Degree            string `json:"degree"`
+	Humidity          string `json:"humidity"`
+	Precipitation     string `json:"precipitation"`
+	Pressure          string `json:"pressure"`
+	UpdateTime        string `json:"update_time"`
+	Weather           string `json:"weather"`
+	WeatherBgPag      string `json:"weather_bg_pag"`
+	WeatherCode       string `json:"weather_code"`
+	WeatherColor      string `json:"weather_color"`
+	WeatherShort      string `json:"weather_short"`
+	WindDirection     string `json:"wind_direction"`
+	WindDirectionName string `json:"wind_direction_name"`
+	WindPower         string `json:"wind_power"`
 }
 
-func getTodayWeather(cityID int) string {
-	url := "http://send.wxbus163.cn/weather/getToday"
-	req := &struct {
-		CityID int `json:"cityid"`
-	}{
-		CityID: cityID,
-	}
+type Forecast1H struct {
+	Degree        string `json:"degree"`
+	UpdateTime    string `json:"update_time"`
+	Weather       string `json:"weather"`
+	WeatherCode   string `json:"weather_code"`
+	WeatherShort  string `json:"weather_short"`
+	WindDirection string `json:"wind_direction"`
+	WindPower     string `json:"wind_power"`
+}
+
+type Index struct {
+	Airconditioner *IndexInfo `json:"airconditioner"`
+	Allergy        *IndexInfo `json:"allergy"`
+	Chill          *IndexInfo `json:"chill"`
+	Clothes        *IndexInfo `json:"clothes"`
+	Comfort        *IndexInfo `json:"comfort"`
+	Dry            *IndexInfo `json:"dry"`
+	Drying         *IndexInfo `json:"drying"`
+	Heatstroke     *IndexInfo `json:"heatstroke"`
+	Makeup         *IndexInfo `json:"makeup"`
+	Mood           *IndexInfo `json:"mood"`
+	Morning        *IndexInfo `json:"morning"`
+	Sports         *IndexInfo `json:"sports"`
+	Sunscreen      *IndexInfo `json:"sunscreen"`
+	Tourism        *IndexInfo `json:"tourism"`
+	Traffic        *IndexInfo `json:"traffic"`
+	Ultraviolet    *IndexInfo `json:"ultraviolet"`
+	Umbrella       *IndexInfo `json:"umbrella"`
+}
+
+type IndexInfo struct {
+	Detail string `json:"detail"`
+	Info   string `json:"info"`
+	Name   string `json:"name"`
+}
+
+type AlarmInfo struct {
+	City       string `json:"city"`
+	Detail     string `json:"detail"`
+	Name       string `json:"name"`
+	Province   string `json:"province"`
+	TypeCode   string `json:"type_code"`
+	TypeName   string `json:"type_name"`
+	UpdateTime string `json:"update_time"`
+}
+
+type Tips struct {
+	Observe map[string]string `json:"observe"`
+}
+
+type Rise struct {
+	Sunrise string `json:"sunrise"`
+	Sunset  string `json:"sunset"`
+	Time    string `json:"time"`
+}
+
+type Air struct {
+	Aqi        int    `json:"aqi"`
+	AqiLevel   int    `json:"aqi_level"`
+	AqiName    string `json:"aqi_name"`
+	Co         string `json:"co"`
+	No2        string `json:"no2"`
+	O3         string `json:"o3"`
+	Pm10       string `json:"pm10"`
+	Pm25       string `json:"pm2.5"`
+	So2        string `json:"so2"`
+	UpdateTime string `json:"update_time"`
+}
+
+func getTodayWeather(province, city, country string) string {
+	url := "https://wis.qq.com/weather/common"
 	params := map[string]interface{}{
-		"cityid": cityID,
+		"source":       "pc",
+		"weather_type": "observe|forecast_1h|index|alarm|tips|rise|air",
+		"province":     province,
+		"city":         city,
+		"country":      country,
 	}
 	rsp := &struct {
-		Status int          `json:"status"`
-		Msg    string       `json:"msg"`
-		List   *WeatherInfo `json:"list"`
+		Data    *WeatherInfo `json:"data"`
+		Message string       `json:"message"`
+		Status  int          `json:"status"`
 	}{}
-	if err := net.HttpClientPost(context.Background(), url, params, nil, req, rsp); err != nil {
+	if err := net.HttpClientGet(context.Background(), url, params, nil, rsp); err != nil {
+		fmt.Println("getTodayWeather fail, err: ", err)
 		return ""
 	}
-	body, _ := json.Marshal(rsp.List)
+	body, _ := json.Marshal(rsp)
+	fmt.Println("rsp: ", rsp)
 	return string(body)
 }

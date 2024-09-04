@@ -98,6 +98,7 @@ func (p *ChatTask) callTool(chatRsp *hyentity.HyChatRsp) (*hyentity.HyMessage, e
 	for _, val := range p.funcCallList {
 		if val.Function.Name == tool.Function.Name {
 			toolRsp = val.Call()
+			fmt.Printf("val.Function.Name: %s, toolRsp: %s\n", val.Function.Name, toolRsp)
 		}
 	}
 
