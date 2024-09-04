@@ -37,7 +37,6 @@ func HttpClientGet(ctx context.Context,
 	if err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}
-	fmt.Println(string(body))
 	if err := json.Unmarshal(body, rsp); err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}
