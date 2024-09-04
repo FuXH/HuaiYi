@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package grpc.huai_yi.chat_service;
+
+option go_package = "github.com/FuXH/HuaiYi/chat_service";
+
+// 定义一个服务
+service Greeter {
+  // 定义一个简单的RPC方法
+  rpc SayHello(HelloRequest) returns (HelloResponse) {}
+}
+
+// 定义请求和响应消息
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string message = 1;
+}
