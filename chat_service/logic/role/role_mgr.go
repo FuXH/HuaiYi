@@ -1,11 +1,13 @@
 package role
 
+import hyentity "chat_service/entity/hunyuan_msg"
+
 type Role interface {
 	ParsePromptFile()
 	Do(input string) error
+	Output(hyRsp *hyentity.HyChatRsp) error
 	//EditMsg(msg *hyentity.HyMessage) string
 	//Chat(chatID string, msg *hyentity.HyMessage, chatCfg *hyentity.HyChatConfig) (*hyentity.HyChatRsp, error)
-	//Output(chatID string, hyRsp *hyentity.HyChatRsp, chatCfg *hyentity.HyChatConfig) error
 	//CallTool(chatID string, hyRsp *hyentity.HyChatRsp, chatCfg *hyentity.HyChatConfig) (*hyentity.HyChatRsp, error)
 	//GenerateID() string
 }
