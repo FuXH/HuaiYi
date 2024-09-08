@@ -18,27 +18,31 @@ const (
 )
 
 type Translator struct {
-	role          *roleentity.Role
-	promptTplFile string
-	inputTpl      string
-	llmConfig     *hyentity.HyChatConfig
+	*role.BaseRole
+	inputTpl string // 输入模版
 }
 
 func init() {
 	translator := &Translator{
-		promptTplFile: "./prompt/translator.tpl",
-		llmConfig:     hyentity.NewChatConfig(),
+		BaseRole: &role.BaseRole{
+			PromptTplFile: "./prompt/translator.tpl",
+			Role: &roleentity.Role{
+				Name: "Translator",
+			},
+			LlmConfig:    hyentity.NewChatConfig(),
+			FuncCallList: nil,
+		},
 	}
 	translator.ParsePromptFile()
 
-	role.RegisterRole(translator.role.Name, translator)
+	role.RegisterRole(translator.Role.Name, translator)
 }
 
 func (p *Translator) Do(input string) error {
-	input = p.editInput(input)
+	input = p.Input(input)
 
 	// 1、调用llm进行翻译
-	chatTask := chat_task.Init(p.role, hunyuan.GetInstance(), p.llmConfig, nil)
+	chatTask := chat_task.Init(p.Role, hunyuan.GetInstance(), p.LlmConfig, nil)
 	chatTaskRsp, err := chatTask.Exec(input)
 	if err != nil {
 		return err
@@ -51,15 +55,20 @@ func (p *Translator) Do(input string) error {
 	return nil
 }
 
+func (p *Translator) Input(input string) string {
+	input = strings.Replace(p.inputTpl, ReplaceQues, input, -1)
+	return input
+}
+
 func (p *Translator) Output(hyRsp *hyentity.HyChatRsp) error {
 	//hyRsp.Display()
-	content := hyRsp.GetContent(p.llmConfig.IsStream)
+	content := hyRsp.GetContent(p.LlmConfig.IsStream)
 	fmt.Printf("翻译结果：%s\n", content)
 	return nil
 }
 
 func (p *Translator) ParsePromptFile() {
-	prompt, err := util.ReadFile(p.promptTplFile)
+	prompt, err := util.ReadFile(p.PromptTplFile)
 	if err != nil {
 		panic(err)
 	}
@@ -73,14 +82,6 @@ func (p *Translator) ParsePromptFile() {
 		panic(err)
 	}
 
-	p.role = &roleentity.Role{
-		Name: transPpt.RoleName,
-		Desc: transPpt.RoleDesc,
-	}
+	p.Role.Desc = transPpt.RoleDesc
 	p.inputTpl = transPpt.InputTemplate
-}
-
-func (p *Translator) editInput(input string) string {
-	input = strings.Replace(p.inputTpl, ReplaceQues, input, -1)
-	return input
 }

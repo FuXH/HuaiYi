@@ -4,6 +4,7 @@ import (
 	roleentity "chat_service/entity/role"
 	"chat_service/logic/task/chat_task"
 	"chat_service/repository/remote/hunyuan"
+	"chat_service/repository/storage/tcvectordb"
 	"chat_service/tool_function"
 	"chat_service/tool_function/weather"
 	"chat_service/util"
@@ -21,6 +22,7 @@ type Alfred struct {
 	promptTplFile string
 	llmConfig     *hyentity.HyChatConfig
 	funcCallList  []*hyentity.HyTool
+	db            *tcvectordb.TCVectorDB // 记忆
 }
 
 func init() {
@@ -72,5 +74,15 @@ func (p *Alfred) Do(input string) error {
 func (p *Alfred) Output(hyRsp *hyentity.HyChatRsp) error {
 	content := hyRsp.GetContent(p.llmConfig.IsStream)
 	fmt.Println("Alfred output: ", content)
+	return nil
+}
+
+func (p *Alfred) Memory(input string) error {
+	// 1、通过metadata过滤文件夹
+
+	// 2、通过文本匹配过滤匹配度高的内容
+
+	// 3、二者去重
+
 	return nil
 }

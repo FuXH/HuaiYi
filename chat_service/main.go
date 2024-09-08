@@ -1,8 +1,9 @@
 package main
 
 import (
-	"chat_service/logic/role"
+	hyentity "chat_service/entity/hunyuan_msg"
 	"fmt"
+	"reflect"
 
 	_ "chat_service/logic/role/alfred"
 	_ "chat_service/logic/role/translator"
@@ -27,8 +28,10 @@ func main() {
 	//chatCfg.ToolChoice = "custom"
 	//_, err := role.GetRole("Alfred").Chat("", msg, chatCfg)
 
-	err := role.GetRole("Alfred").Do("今天穿什么衣服？")
-	fmt.Println(err)
+	//err := role.GetRole("Alfred").Do("今天穿什么衣服？")
+	//fmt.Println(err)
+	rsp := &hyentity.HyChatRsp{}
+	fmt.Println(reflect.TypeOf(rsp), reflect.ValueOf(rsp))
 
 	//w := &weather.Weather{}
 	//str := w.Call("{}")

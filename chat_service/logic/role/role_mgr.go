@@ -1,15 +1,22 @@
 package role
 
-import hyentity "chat_service/entity/hunyuan_msg"
+import (
+	hyentity "chat_service/entity/hunyuan_msg"
+	roleentity "chat_service/entity/role"
+)
 
 type Role interface {
 	ParsePromptFile()
 	Do(input string) error
+	Input(input string) string
 	Output(hyRsp *hyentity.HyChatRsp) error
-	//EditMsg(msg *hyentity.HyMessage) string
-	//Chat(chatID string, msg *hyentity.HyMessage, chatCfg *hyentity.HyChatConfig) (*hyentity.HyChatRsp, error)
-	//CallTool(chatID string, hyRsp *hyentity.HyChatRsp, chatCfg *hyentity.HyChatConfig) (*hyentity.HyChatRsp, error)
-	//GenerateID() string
+}
+
+type BaseRole struct {
+	Role          *roleentity.Role
+	LlmConfig     *hyentity.HyChatConfig
+	FuncCallList  []*hyentity.HyTool
+	PromptTplFile string
 }
 
 var (
