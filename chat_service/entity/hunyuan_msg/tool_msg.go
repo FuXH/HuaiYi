@@ -1,23 +1,9 @@
 package hunyuan_msg
 
 import (
-	"chat_service/tool_function"
-
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	hunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
 )
-
-func NewHyTool(funcInfo tool_function.Function) *HyTool {
-	fcName, fcDesc, argsDesc := funcInfo.GetInfo()
-	return &HyTool{
-		Type: "function",
-		Function: &HyFunction{
-			Name:        fcName,
-			Parameters:  argsDesc,
-			Description: fcDesc,
-		},
-	}
-}
 
 // HyTool tool_function
 type HyTool struct {
@@ -41,12 +27,4 @@ func (s *HyTool) Convert() *hunyuan.Tool {
 		},
 	}
 	return res
-}
-
-func (s *HyTool) Call() string {
-	toolFunc := tool_function.FunctionList[s.Function.Name]
-	if toolFunc == nil {
-		return ""
-	}
-	return toolFunc.Call(s.Function.Parameters)
 }

@@ -1,6 +1,7 @@
 package chat_task
 
 import (
+	"chat_service/tool_function"
 	"fmt"
 	"time"
 
@@ -97,7 +98,7 @@ func (p *ChatTask) callTool(chatRsp *hyentity.HyChatRsp) (*hyentity.HyMessage, e
 	toolRsp := ""
 	for _, val := range p.funcCallList {
 		if val.Function.Name == tool.Function.Name {
-			toolRsp = val.Call()
+			toolRsp = tool_function.CallFunction(val.Function.Name, "")
 			fmt.Printf("val.Function.Name: %s, toolRsp: %s\n", val.Function.Name, toolRsp)
 		}
 	}

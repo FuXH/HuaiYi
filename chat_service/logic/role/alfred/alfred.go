@@ -16,30 +16,29 @@ import (
 )
 
 type Alfred struct {
-	//base_role.BaseRole
+	*role.BaseRole
 
-	role          *roleentity.Role
-	promptTplFile string
-	llmConfig     *hyentity.HyChatConfig
-	funcCallList  []*hyentity.HyTool
-	db            *tcvectordb.TCVectorDB // 记忆
+	db *tcvectordb.TCVectorDB // 记忆
 }
 
 func init() {
 	alfred := &Alfred{
-		promptTplFile: "./prompt/alfred.tpl",
-		llmConfig:     hyentity.NewChatConfig(),
-		funcCallList: []*hyentity.HyTool{
-			hyentity.NewHyTool(tool_function.FunctionList[weather.FuncName]),
+		BaseRole: &role.BaseRole{
+			Role: &roleentity.Role{
+				Name: "Alfred",
+			},
+			PromptTplFile: "./prompt/alfred.tpl",
+			LlmConfig:     hyentity.NewChatConfig(),
+			FuncCallList:  tool_function.GetFuncCallList(weather.FuncName),
 		},
 	}
 	alfred.ParsePromptFile()
 
-	role.RegisterRole(alfred.role.Name, alfred)
+	role.RegisterRole(alfred.Role.Name, alfred)
 }
 
 func (p *Alfred) ParsePromptFile() {
-	prompt, err := util.ReadFile(p.promptTplFile)
+	prompt, err := util.ReadFile(p.PromptTplFile)
 	if err != nil {
 		panic(err)
 	}
@@ -52,14 +51,11 @@ func (p *Alfred) ParsePromptFile() {
 		panic(err)
 	}
 
-	p.role = &roleentity.Role{
-		Name: alfredPmt.RoleName,
-		Desc: alfredPmt.RoleDesc,
-	}
+	p.Role.Desc = alfredPmt.RoleDesc
 }
 
 func (p *Alfred) Do(input string) error {
-	chatTask := chat_task.Init(p.role, hunyuan.GetInstance(), p.llmConfig, p.funcCallList)
+	chatTask := chat_task.Init(p.Role, hunyuan.GetInstance(), p.LlmConfig, p.FuncCallList)
 	chatTaskRsp, err := chatTask.Exec(input)
 	if err != nil {
 		return err
@@ -71,8 +67,12 @@ func (p *Alfred) Do(input string) error {
 	return nil
 }
 
+func (p *Alfred) Input(input string) string {
+	return input
+}
+
 func (p *Alfred) Output(hyRsp *hyentity.HyChatRsp) error {
-	content := hyRsp.GetContent(p.llmConfig.IsStream)
+	content := hyRsp.GetContent(p.LlmConfig.IsStream)
 	fmt.Println("Alfred output: ", content)
 	return nil
 }
